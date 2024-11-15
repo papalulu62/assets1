@@ -34,49 +34,27 @@
 		const canvas = document.getElementById("renderCanvas"); // Get the canvas element
 		const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
 
-		//https://playground.babylonjs.com/#RAIC7U#3
-			const createScene = function () {
-			const scene = new BABYLON.Scene(engine);
-
-			const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:8, height:8});
-			ground.position.y = -1;
-			const box_1 = BABYLON.MeshBuilder.CreateBox("box_1", {});
-			const box_2 = BABYLON.MeshBuilder.CreateBox("box_2", {});
-			const box_3 = BABYLON.MeshBuilder.CreateBox("box_3", {});
-
-			box_1.position.x = 4;
-			
-			box_2.position.x = -1;
-			box_2.position.z = 3;
-			
-			box_3.position.x = -1;
-			box_3.position.z = -3;
-			
-			
-			const camera = new BABYLON.DeviceOrientationCamera("DevOrCam", new BABYLON.Vector3(0, 0, 0), scene);
-			camera.setTarget(new BABYLON.Vector3(0, 0, 3));
-			//camera.angularSensibility = 10;
-			//camera.moveSensibility = 10;
+		const createScene = function () {
+			var scene = new BABYLON.Scene(engine);
+			var camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI / 2,  Math.PI / 2, 5, BABYLON.Vector3.Zero(), scene);
 			camera.attachControl(canvas, true);
-			//camera.lowerBetaLimit = 0.00;
-			//camera.upperBetaLimit = 1.57;
-			//camera.lowerRadiusLimit = 1.0;
-			//camera.upperRadiusLimit = 50.0;
-			
-			const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 5, 0));
-			light.intensity = 1.0;
-			
+			camera.inputs.attached.mousewheel.detachControl(canvas);
+
+			var dome = new BABYLON.PhotoDome(
+				"testdome",
+				"https://upload.wikimedia.org/wikipedia/commons/7/7c/Au_March%C3%A9_de_la_Butte%2C_Paris_April_2007.jpg",
+				{
+					resolution: 32,
+					size: 1000
+				},
+				scene
+			);
+
 			return scene;
 		};
 
 		const scene = createScene(); //Call the createScene function
-		
-		engine.runRenderLoop(
-			function () {
-				scene.render();
-			}
-		);
-
+		engine.runRenderLoop( function () {scene.render();} );
 		window.addEventListener("resize", function () {engine.resize();});
 		  
     </script>
