@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-		<title>Babylon.js | Animation</title>
+		<title>Babylon.js | Loading external 3D model</title>
 
     <style>
       html,
@@ -20,11 +20,16 @@
         touch-action: none;
       }
     </style>
-
-    <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-    <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
- </head>
+    
+	<script src="https://cdn.babylonjs.com/babylon.js"></script>
+	<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+	<!--
+	<script src="src/babylon.objFileLoader.js"></script>
+	<script src="src/babylon.js"></script>
+	<script src="src/babylonjs.loaders.min.js"></script>
+	-->
+	
+</head>
 
 <body>
 	<canvas id="renderCanvas" touch-action="none"></canvas>
@@ -34,29 +39,73 @@
 		const canvas = document.getElementById("renderCanvas"); // Get the canvas element
 		const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
 
-		const createScene = function () {
-			var scene = new BABYLON.Scene(engine);
-			var camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI / 2,  Math.PI / 2, 5, BABYLON.Vector3.Zero(), scene);
-			camera.attachControl(canvas, true);
-			//camera.inputs.attached.mousewheel.detachControl(canvas);
+		function createScene() {
+			const scene = new BABYLON.Scene(engine);
 
-			var dome = new BABYLON.PhotoDome(
-				"testdome",
-				//"https://upload.wikimedia.org/wikipedia/commons/7/7c/Au_March%C3%A9_de_la_Butte%2C_Paris_April_2007.jpg",
-				//"https://raw.githubusercontent.com/papalulu62/assets1/refs/heads/main/penrose0.jpg",
-				"https://raw.githubusercontent.com/papalulu62/assets1/refs/heads/main/pano1.jpg",
-				{
-					resolution: 32,
-					size: 1000
-				},
-				scene
-			);
-			dome.fovMultiplier = 0.50;
+			const local_server = false;
+			if(local_server){
+				baseUrl_assets = "/assets/";
+				}	
+			else{
+				baseUrl_assets = "https://raw.githubusercontent.com/papalulu62/assets1/refs/heads/main/";
+			};
+
+						const camera = new BABYLON.ArcRotateCamera("camera", 0, Math.PI/2.0*4.0/5.0 , 3, new BABYLON.Vector3(0, 0, 0));
+			camera.attachControl(canvas, true);
+			camera.lowerBetaLimit = 0.00;
+			camera.upperBetaLimit = 1.57;
+			camera.lowerRadiusLimit = 2.0;
+			camera.upperRadiusLimit = 50.0;
+			
+			const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(3, 2, -5));
+			//light.intensity = 2.0;
+			
+			const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:4, height:4}); 
+			const groundMat = new BABYLON.StandardMaterial("");
+			groundMat.diffuseTexture = new BABYLON.Texture(baseUrl_assets + "006-floor.png");
+			groundMat.diffuseTexture.hasAlpha = true;
+			ground.material = groundMat;
+			ground.position.y = -0.50;
+			
+			const radMat = new BABYLON.StandardMaterial("radiatorMaterial", scene);
+			//redMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
+			//box_2.material = redMaterial;
+			
+			(async () => {
+				await BABYLON.appendSceneAsync(baseUrl_assets + "radiateur.obj", scene);
+				const radiateur = scene.meshes[1];
+				radiateur.material = radMat;
+				radiateur.position.y = 0.25 ;
+				radiateur.rotation.x = Math.PI / 2.0 ;
+				radiateur.rotation.y = Math.PI / 2.0 ;
+			})();
+			
+			//BABYLON.SceneLoader.ImportMeshAsync("radiateur", baseUrl_assets, "radiateur.obj").then((result) => {
+			//	const radiateur = scene.getMeshByName("radiateur");
+			//	radiateur.position.y = 0.50;
+			//});
+			
+			
+			angle = Math.PI / 2.0 ;
+			delta_angle = -0.0003;
+			scene.onBeforeRenderObservable.add( () => {
+				if(scene.meshes.length > 1){
+					angle += delta_angle;
+					scene.meshes[1].rotation.y = angle ;
+				};
+			});
+			
 			return scene;
 		};
 
 		const scene = createScene(); //Call the createScene function
-		engine.runRenderLoop( function () {scene.render();} );
+		
+		engine.runRenderLoop(
+			function () {
+				scene.render();
+			}
+		);
+
 		window.addEventListener("resize", function () {engine.resize();});
 		  
     </script>
